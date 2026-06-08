@@ -175,6 +175,15 @@ button:active{
 </div>
 
 <script>
+
+function getTotal(){
+  let sum = 0;
+  for(let k in data){
+    if(data[k] !== null) sum += data[k];
+  }
+  return sum;
+}
+
 const stores = [
   {name:"湖西", color:"#ffe0e0"},
   {name:"高塚", color:"#ffe0e0"},
@@ -204,6 +213,7 @@ let currentUser = "東伸水産";
 
 /* 日付 */
 const now = new Date();
+const jst = new Date(now.toLocaleString("en-US",{timeZone:"Asia/Tokyo"}));
 const week = ["日","月","火","水","木","金","土"];
 const today = now.toISOString().slice(0,10);
 document.getElementById("date").innerText =
@@ -324,7 +334,7 @@ function shareLine(){
     const val = data[s.name]===null ? "?" : data[s.name];
     text+=`${s.name}：${val}\n`;
   });
-
+text += `\n合計：${Object.values(data).reduce((a,b)=>a+(b||0),0)}`;
   window.open("https://line.me/R/msg/text/?"+encodeURIComponent(text));
 }
 
@@ -336,6 +346,9 @@ function exportCSV(){
     let val = data[s.name]===null ? "?" : data[s.name];
     csv+=`${today},${currentUser},${s.name},${val}\n`;
   });
+
+  // ★ここが合計（絶対入る）
+  csv+=`${today},合計,${getTotal()}\n`;
 
   const blob=new Blob(
     [new Uint8Array([0xEF,0xBB,0xBF]), csv],
