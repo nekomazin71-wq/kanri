@@ -1,9 +1,12 @@
 <!DOCTYPE html>
 <html lang="ja">
-<link rel="manifest" href="manifest.json">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 
 <title>出荷入力</title>
 
@@ -215,7 +218,7 @@ let currentUser = "東伸水産";
 const now = new Date();
 const jst = new Date(now.toLocaleString("en-US",{timeZone:"Asia/Tokyo"}));
 const week = ["日","月","火","水","木","金","土"];
-const today = now.toISOString().slice(0,10);
+const today = jst.toISOString().slice(0,10);
 document.getElementById("date").innerText =
   `${today}（${week[now.getDay()]}）`;
 

@@ -1,4 +1,4 @@
-const CACHE_NAME = "shipment-app-v1";
+const CACHE_NAME = 'app-v2'; // ©XV‚²‚Æ‚É•Ï‚¦‚é
 
 const urlsToCache = [
   "./",
