@@ -1,42 +1,39 @@
-const CACHE_NAME = 'app-v2'; // ←更新ごとに変える
-
-const urlsToCache = [
+const CACHE_NAME = "my-recipe-v1";
+const ASSETS_TO_CACHE = [
   "./",
-  "./index.html",
+  "./my_recipe_complete.html",
   "./manifest.json",
-  "./icon-192.png",
-  "./icon-512.png"
+  // アイコンがある場合はここに追加
+  // "./icon.png" 
 ];
 
 // インストール時にキャッシュ
-self.addEventListener("install", event => {
+self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(urlsToCache);
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(ASSETS_TO_CACHE);
     })
   );
+  self.skipWaiting();
 });
 
-// リクエスト時：キャッシュ優先
-self.addEventListener("fetch", event => {
-  event.respondWith(
-    caches.match(event.request).then(response => {
-      return response || fetch(event.request);
-    })
-  );
-});
-
-// 古いキャッシュ削除
-self.addEventListener("activate", event => {
+// 古いキャッシュを削除
+self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then(keys => {
+    caches.keys().then((keys) => {
       return Promise.all(
-        keys.map(key => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
-        })
+        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
       );
+    })
+  );
+  self.clients.claim();
+});
+
+// リクエスト時にキャッシュを優先して返す (Cache First)
+self.addEventListener("fetch", (event) => {
+  event.respondWith(
+    caches.match(event.request).then((response) => {
+      return response || fetch(event.request);
     })
   );
 });

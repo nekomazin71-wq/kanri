@@ -1,17 +1,17 @@
 {
-  "name": "出荷入力",
-  "short_name": "出荷入力",
+  "name": "俺のレシピ",
+  "short_name": "俺レシピ",
+  "description": "人数に合わせて分量を自動計算できるレシピ管理アプリ",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#2196f3",
-  "orientation": "portrait",
-
+  "theme_color": "#4CAF50",
   "icons": [
     {
       "src": "icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "icon-512.png",
