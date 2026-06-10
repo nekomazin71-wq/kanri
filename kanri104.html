@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="ja">
+<link rel="manifest" href="manifest.json">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>出荷入力</title>
+
+<style>
+body {
+  font-family: sans-serif;
+  padding: 10px;
+  margin: 0;
+}
+
+#date {
+  font-size: 20px;
+  margin-bottom: 5px;
+}
+
+/* 担当ボタン全体 */
+#userButtons {
+  display: flex;
+  gap: 5px;
+}
+
+/* 各ボタン */
+#userButtons button{
+  flex: 1;              /* ←均等幅にする（重要） */
+  height:40px;
+  font-size:16px;
+  background:#ddd;
+  border:none;
+  border-radius:6px;
+}
+
+.activeUser{
+  background:#2196f3 !important;
+  color:#fff;
+}
+
+/* リスト */
+#list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 18px;
+  border: 2px solid #999;
+  padding: 4px;
+  border-radius: 6px;
+}
+
+/* 数量 */
+.qty {
+  width: 38px;
+  height: 38px;
+  line-height: 38px;
+  text-align: center;
+  border-radius: 6px;
+}
+
+.zero {
+  background: #ccc;
+  color: #666;
+}
+
+.unknown {
+  background: #aa0000;
+  color:#fff;
+  font-weight: bold;
+}
+
+/* 行ボタン */
+.row button {
+  width: 38px;
+  height: 38px;
+}
+
+/* 全店ボタン */
+.allButtons {
+  display: flex;
+  gap: 10px;
+  margin: 5px 0;
+}
+
+.allButtons button {
+  flex: 1;
+  height: 40px;
+  border-radius:6px;
+  border:1px solid #999;
+  font-size:16px;
+  background:#fff;
+}
+
+/* 合計 */
+#total {
+  font-size: 20px;
+  position: sticky;
+  bottom: 0;
+  background: white;
+  padding: 5px;
+  border-top: 2px solid #999;
+}
+
+/* アクションボタン */
+.actionButtons {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+}
+
+.actionButtons button {
+  height: 38px;
+  border-radius:6px;
+  border:1px solid #999;
+  font-size:14px;
+}
+
+/* 個別色分け */
+.actionButtons button:nth-child(1){
+  background:#e1f5fe; /* 保存 */
+}
+
+.actionButtons button:nth-child(2){
+  background:#c8e6c9; /* LINE */
+}
+
+.actionButtons button:nth-child(3){
+  background:#ffcdd2; /* リセット */
+}
+
+.actionButtons button:nth-child(4){
+  background:#fff9c4; /* CSV */
+}
+
+/* 押した時 */
+button:active{
+  opacity:0.7;
+}
+</style>
+</head>
+
+<body>
+
+<div id="date"></div>
+
+<div id="userButtons">
+  <button onclick="setUser('東伸水産')" id="user_A">東伸水産</button>
+  <button onclick="setUser('青山水産')" id="user_B">青山水産</button>
+  <button onclick="setUser('カネツル')" id="user_C">カネツル</button>
+  <button onclick="setCustomUser()" id="user_D">＋</button>
+</div>
+
+<div id="list"></div>
+
+<div class="allButtons">
+  <button onclick="changeAll(-1)">全店－1</button>
+  <button onclick="changeAll(1)">全店＋1</button>
+</div>
+
+<div id="total">合計：0</div>
+
+<div class="actionButtons">
+  <button onclick="save()">保存</button>
+  <button onclick="shareLine()">LINE</button>
+  <button onclick="resetAll()">リセット</button>
+  <button onclick="exportCSV()">CSV</button>
+</div>
+
+<script>
+
+function getTotal(){
+  let sum = 0;
+  for(let k in data){
+    if(data[k] !== null) sum += data[k];
+  }
+  return sum;
+}
+
+const stores = [
+  {name:"湖西", color:"#ffe0e0"},
+  {name:"高塚", color:"#ffe0e0"},
+  {name:"北寺島", color:"#e0e0ff"},
+  {name:"有玉", color:"#e0e0ff"},
+  {name:"引佐", color:"#e0e0ff"},
+  {name:"磐田", color:"#ffffe0"},
+  {name:"袋井", color:"#ffffe0"},
+  {name:"中野", color:"#ffe0ff"},
+  {name:"袋井南", color:"#ffe0ff"},
+  {name:"掛川", color:"#e1f5fe"},
+  {name:"成滝", color:"#e1f5fe"},
+  {name:"菊川", color:"#e1f5fe"},
+  {name:"静波", color:"#ffe0e0"},
+  {name:"石津", color:"#ffe0e0"},
+  {name:"井口", color:"#e0e0ff"},
+  {name:"藤枝", color:"#e0e0ff"},
+  {name:"丸子", color:"#ffffe0"},
+  {name:"富士見", color:"#ffffe0"},
+  {name:"清水", color:"#ffe0ff"},
+  {name:"竜南", color:"#ffe0ff"},
+  {name:"大坪", color:"#ffe0ff"}
+];
+
+const data = {};
+let currentUser = "東伸水産";
+
+/* 日付 */
+const now = new Date();
+const jst = new Date(now.toLocaleString("en-US",{timeZone:"Asia/Tokyo"}));
+const week = ["日","月","火","水","木","金","土"];
+const today = now.toISOString().slice(0,10);
+document.getElementById("date").innerText =
+  `${today}（${week[now.getDay()]}）`;
+
+const list = document.getElementById("list");
+
+/* 店舗生成 */
+stores.forEach((store,i)=>{
+  data[store.name]=0;
+
+  const row=document.createElement("div");
+  row.className="row";
+  row.style.background = store.color;
+
+  row.innerHTML=`
+    <span>${store.name}</span>
+    <div>
+      <button onclick="change(${i},-1)">-</button>
+      <span id="qty${i}" class="qty zero">0</span>
+      <button onclick="change(${i},1)">+</button>
+    </div>
+  `;
+  list.appendChild(row);
+});
+
+/* 表示 */
+function updateDisplay(i){
+  const name = stores[i].name;
+  const el = document.getElementById("qty"+i);
+
+  if(data[name]===null){
+    el.innerText="?";
+    el.className="qty unknown";
+  }else{
+    el.innerText=data[name];
+    el.className="qty";
+    if(data[name]===0) el.classList.add("zero");
+  }
+}
+
+/* 個別 */
+function change(i,val){
+  const name = stores[i].name;
+
+  if(data[name]===null){
+    if(val===1) data[name]=1;
+  }else{
+    if(val===-1 && data[name]===0){
+      if(!confirm("不明（？）にしますか？")) return;
+      data[name]=null;
+    }else{
+      data[name]=Math.max(0,data[name]+val);
+    }
+  }
+
+  updateDisplay(i);
+  updateTotal();
+}
+
+/* 全店 */
+function changeAll(val){
+  stores.forEach((s,i)=>{
+    const name=s.name;
+
+    if(data[name]===null){
+      if(val===1) data[name]=1;
+    }else{
+      if(val===-1 && data[name]===0){
+        data[name]=null;
+      }else{
+        data[name]=Math.max(0,data[name]+val);
+      }
+    }
+
+    updateDisplay(i);
+  });
+  updateTotal();
+}
+
+/* 合計 */
+function updateTotal(){
+  let sum=0;
+  for(let k in data){
+    if(data[k]!==null) sum+=data[k];
+  }
+  document.getElementById("total").innerText="合計："+sum;
+}
+
+/* 保存 */
+function save(){
+  localStorage.setItem("shipment_"+today,
+    JSON.stringify({user:currentUser,data:data})
+  );
+  alert("保存OK");
+}
+
+/* 読込 */
+function load(){
+  const saved=localStorage.getItem("shipment_"+today);
+  if(saved){
+    const parsed=JSON.parse(saved);
+    const d=parsed.data||parsed;
+
+    stores.forEach((s,i)=>{
+      data[s.name]=(d[s.name]===undefined)?0:d[s.name];
+      updateDisplay(i);
+    });
+  }
+  updateTotal();
+}
+
+/* LINE */
+function shareLine(){
+  let text=`出荷報告（${today}）\n担当：${currentUser}\n\n`;
+
+  stores.forEach(s=>{
+    const val = data[s.name]===null ? "?" : data[s.name];
+    text+=`${s.name}：${val}\n`;
+  });
+text += `\n合計：${Object.values(data).reduce((a,b)=>a+(b||0),0)}`;
+  window.open("https://line.me/R/msg/text/?"+encodeURIComponent(text));
+}
+
+/* CSV */
+function exportCSV(){
+  let csv="日付,担当,店舗,数量\n";
+
+  stores.forEach(s=>{
+    let val = data[s.name]===null ? "?" : data[s.name];
+    csv+=`${today},${currentUser},${s.name},${val}\n`;
+  });
+
+  // ★ここが合計（絶対入る）
+  csv+=`${today},${currentUser},合計,${getTotal()}\n`;
+
+  const blob=new Blob(
+    [new Uint8Array([0xEF,0xBB,0xBF]), csv],
+    {type:"text/csv"}
+  );
+
+  const link=document.createElement("a");
+  link.href=URL.createObjectURL(blob);
+  link.download=`出荷_${today}.csv`;
+  link.click();
+}
+
+/* リセット */
+function resetAll(){
+  if(!confirm("リセットしますか？")) return;
+
+  stores.forEach((s,i)=>{
+    data[s.name]=0;
+    updateDisplay(i);
+  });
+  updateTotal();
+}
+
+/* 担当 */
+function setActiveButton(id){
+  document.querySelectorAll("#userButtons button")
+    .forEach(b=>b.classList.remove("activeUser"));
+  document.getElementById(id).classList.add("activeUser");
+}
+
+function setUser(name){
+  currentUser=name;
+  localStorage.setItem("user",name);
+
+  if(name==="東伸水産") setActiveButton("user_A");
+  else if(name==="青山水産") setActiveButton("user_B");
+  else if(name==="カネツル") setActiveButton("user_C");
+}
+
+function setCustomUser(){
+  const name=prompt("担当名入力");
+  if(!name) return;
+
+  currentUser=name;
+  localStorage.setItem("user",name);
+  localStorage.setItem("customUser",name);
+
+  document.getElementById("user_D").innerText=name;
+  setActiveButton("user_D");
+}
+
+function loadUser(){
+  const saved = localStorage.getItem("user");
+  const custom = localStorage.getItem("customUser");
+
+  if(custom){
+    document.getElementById("user_D").innerText = custom;
+  }
+
+  if(saved){
+    currentUser = saved;
+  }
+
+  if(currentUser==="東伸水産") setActiveButton("user_A");
+  else if(currentUser==="青山水産") setActiveButton("user_B");
+  else if(currentUser==="カネツル") setActiveButton("user_C");
+  else setActiveButton("user_D");
+}
+
+/* SW */
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
+}
+
+/* 初期化 */
+load();
+loadUser();
+</script>
+
+</body>
+</html>
