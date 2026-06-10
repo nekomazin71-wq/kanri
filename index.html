@@ -3,10 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <link rel="manifest" href="manifest.json">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
+<meta name="theme-color" content="#4CAF50">
 
 <title>出荷入力</title>
 
@@ -15,35 +14,43 @@ body {
   font-family: sans-serif;
   padding: 10px;
   margin: 0;
+  background: #fff;
 }
 
 #date {
   font-size: 20px;
+  font-weight: bold;
   margin-bottom: 5px;
 }
 
-/* 担当ボタン全体 */
+#status {
+  min-height: 22px;
+  margin: 4px 0 8px;
+  font-size: 14px;
+  color: #333;
+}
+
 #userButtons {
   display: flex;
   gap: 5px;
+  margin-bottom: 8px;
 }
 
-/* 各ボタン */
-#userButtons button{
-  flex: 1;              /* ←均等幅にする（重要） */
-  height:40px;
-  font-size:16px;
-  background:#ddd;
-  border:none;
-  border-radius:6px;
+#userButtons button {
+  flex: 1;
+  height: 40px;
+  border: none;
+  border-radius: 6px;
+  background: #ddd;
+  font-size: 13px;
 }
 
-.activeUser{
-  background:#2196f3 !important;
-  color:#fff;
+.activeUser {
+  background: #2196f3 !important;
+  color: #fff;
+
 }
 
-/* リスト */
 #list {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -54,98 +61,89 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 18px;
   border: 2px solid #999;
   padding: 4px;
   border-radius: 6px;
 }
 
-/* 数量 */
+.storeName {
+  font-size: 15px;
+}
+
 .qty {
+  display: inline-block;
   width: 38px;
   height: 38px;
   line-height: 38px;
   text-align: center;
   border-radius: 6px;
+  background: #fff;
+
 }
 
 .zero {
   background: #ccc;
-  color: #666;
 }
 
 .unknown {
   background: #aa0000;
-  color:#fff;
-  font-weight: bold;
+  color: #fff;
 }
 
-/* 行ボタン */
 .row button {
   width: 38px;
   height: 38px;
+  font-size: 18px;
 }
 
-/* 全店ボタン */
 .allButtons {
   display: flex;
   gap: 10px;
-  margin: 5px 0;
+  margin: 8px 0 5px;
 }
 
 .allButtons button {
   flex: 1;
   height: 40px;
-  border-radius:6px;
-  border:1px solid #999;
-  font-size:16px;
-  background:#fff;
+  background: #ddd;
+  border: none;
+  border-radius: 6px;
+  font-size: 15px;
 }
 
-/* 合計 */
 #total {
-  font-size: 20px;
   position: sticky;
   bottom: 0;
-  background: white;
-  padding: 5px;
+  background: #fff;
+  padding: 6px 5px;
   border-top: 2px solid #999;
+  font-size: 18px;
+  z-index: 10;
 }
 
-/* アクションボタン */
 .actionButtons {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 5px;
+  margin-top: 6px;
 }
 
 .actionButtons button {
-  height: 38px;
-  border-radius:6px;
-  border:1px solid #999;
-  font-size:14px;
+  height: 40px;
+  border: none;
+  border-radius: 6px;
+
 }
 
-/* 個別色分け */
-.actionButtons button:nth-child(1){
-  background:#e1f5fe; /* 保存 */
-}
+.actionButtons button:nth-child(1) { background: #4caf50; color: #fff; } /* 保存 */
+.actionButtons button:nth-child(2) { background: #00C300; color: #fff; } /* LINE */
+.actionButtons button:nth-child(3) { background: #f44336; color: #fff; } /* リセット */
+.actionButtons button:nth-child(4) { background: #2196f3; color: #fff; } /* CSV */
 
-.actionButtons button:nth-child(2){
-  background:#c8e6c9; /* LINE */
-}
-
-.actionButtons button:nth-child(3){
-  background:#ffcdd2; /* リセット */
-}
-
-.actionButtons button:nth-child(4){
-  background:#fff9c4; /* CSV */
-}
-
-/* 押した時 */
-button:active{
-  opacity:0.7;
+/* 押したとき */
+button:active {
+  transform: scale(0.95);
+  opacity: 0.8;
 }
 </style>
 </head>
@@ -153,19 +151,13 @@ button:active{
 <body>
 
 <div id="date"></div>
-
-<div id="userButtons">
-  <button onclick="setUser('東伸水産')" id="user_A">東伸水産</button>
-  <button onclick="setUser('青山水産')" id="user_B">青山水産</button>
-  <button onclick="setUser('カネツル')" id="user_C">カネツル</button>
-  <button onclick="setCustomUser()" id="user_D">＋</button>
-</div>
-
+<div id="userButtons"></div>
+<div id="status"></div>
 <div id="list"></div>
 
 <div class="allButtons">
-  <button onclick="changeAll(-1)">全店－1</button>
-  <button onclick="changeAll(1)">全店＋1</button>
+  <button onclick="changeAll(-1)">全店 － 1</button>
+  <button onclick="changeAll(1)">全店 ＋ 1</button>
 </div>
 
 <div id="total">合計：0</div>
@@ -178,257 +170,383 @@ button:active{
 </div>
 
 <script>
+/* ===== 設定 ===== */
+const CONFIG = {
+  users: [
+    { id: "A", name: "東伸水産" },
+    { id: "B", name: "青山水産" },
+    { id: "C", name: "カネツル青果" }
+  ],
+  stores: [
+    { name: "湖西", color: "#ffe0e0" },
+    { name: "高塚", color: "#ffe0e0" },
+    { name: "北寺島", color: "#e0e0ff" },
+    { name: "有玉", color: "#e0e0ff" },
+    { name: "引佐", color: "#e0e0ff" },
+    { name: "磐田", color: "#ffffe0" },
+    { name: "袋井", color: "#ffffe0" },
+    { name: "中野", color: "#ffe0ff" },
+    { name: "袋井南", color: "#ffe0ff" },
+    { name: "掛川", color: "#e1f5fe" },
+    { name: "成滝", color: "#e1f5fe" },
+    { name: "菊川", color: "#e1f5fe" },
+    { name: "静波", color: "#ffe0e0" },
+    { name: "石津", color: "#ffe0e0" },
+    { name: "井口", color: "#e0e0ff" },
+    { name: "藤枝", color: "#e0e0ff" },
+    { name: "丸子", color: "#ffffe0" },
+    { name: "富士見", color: "#ffffe0" },
+    { name: "清水", color: "#ffe0ff" },
+    { name: "竜南", color: "#ffe0ff" },
+    { name: "大坪", color: "#ffe0ff" }
+  ]
+};
 
-function getTotal(){
-  let sum = 0;
-  for(let k in data){
-    if(data[k] !== null) sum += data[k];
-  }
-  return sum;
-}
-
-const stores = [
-  {name:"湖西", color:"#ffe0e0"},
-  {name:"高塚", color:"#ffe0e0"},
-  {name:"北寺島", color:"#e0e0ff"},
-  {name:"有玉", color:"#e0e0ff"},
-  {name:"引佐", color:"#e0e0ff"},
-  {name:"磐田", color:"#ffffe0"},
-  {name:"袋井", color:"#ffffe0"},
-  {name:"中野", color:"#ffe0ff"},
-  {name:"袋井南", color:"#ffe0ff"},
-  {name:"掛川", color:"#e1f5fe"},
-  {name:"成滝", color:"#e1f5fe"},
-  {name:"菊川", color:"#e1f5fe"},
-  {name:"静波", color:"#ffe0e0"},
-  {name:"石津", color:"#ffe0e0"},
-  {name:"井口", color:"#e0e0ff"},
-  {name:"藤枝", color:"#e0e0ff"},
-  {name:"丸子", color:"#ffffe0"},
-  {name:"富士見", color:"#ffffe0"},
-  {name:"清水", color:"#ffe0ff"},
-  {name:"竜南", color:"#ffe0ff"},
-  {name:"大坪", color:"#ffe0ff"}
-];
-
-const data = {};
-let currentUser = "東伸水産";
-
-/* 日付 */
-const now = new Date();
-const jst = new Date(now.toLocaleString("en-US",{timeZone:"Asia/Tokyo"}));
-const week = ["日","月","火","水","木","金","土"];
-const today = jst.toISOString().slice(0,10);
-document.getElementById("date").innerText =
-  `${today}（${week[now.getDay()]}）`;
+let stores = [];
+let data = {};
+let currentUser = "";
 
 const list = document.getElementById("list");
+const statusEl = document.getElementById("status");
 
-/* 店舗生成 */
-stores.forEach((store,i)=>{
-  data[store.name]=0;
+/* ===== 日付：日本時間 ===== */
+const now = new Date();
+const jst = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
+const today = jst.toISOString().slice(0, 10);
+document.getElementById("date").innerText = today;
 
-  const row=document.createElement("div");
-  row.className="row";
-  row.style.background = store.color;
+/* ===== 初期化 ===== */
+stores = CONFIG.stores;
+initApp();
 
-  row.innerHTML=`
-    <span>${store.name}</span>
-    <div>
-      <button onclick="change(${i},-1)">-</button>
-      <span id="qty${i}" class="qty zero">0</span>
-      <button onclick="change(${i},1)">+</button>
-    </div>
-  `;
-  list.appendChild(row);
-});
+function initApp() {
+  stores.forEach((s, i) => {
+    data[s.name] = 0;
 
-/* 表示 */
-function updateDisplay(i){
-  const name = stores[i].name;
-  const el = document.getElementById("qty"+i);
+    const row = document.createElement("div");
+    row.className = "row";
+    row.style.background = s.color;
 
-  if(data[name]===null){
-    el.innerText="?";
-    el.className="qty unknown";
-  }else{
-    el.innerText=data[name];
-    el.className="qty";
-    if(data[name]===0) el.classList.add("zero");
+    row.innerHTML = `
+      <span class="storeName">${s.name}</span>
+      <div>
+        <button type="button" onclick="change(${i}, -1)">-</button>
+        <span id="qty${i}" class="qty zero">0</span>
+        <button type="button" onclick="change(${i}, 1)">+</button>
+      </div>
+    `;
+
+    list.appendChild(row);
+  });
+
+  const userButtons = document.getElementById("userButtons");
+
+  CONFIG.users.forEach(u => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.innerText = u.name;
+    btn.id = u.id;
+    btn.onclick = () => setUser(u.name, u.id);
+    userButtons.appendChild(btn);
+  });
+
+  const plus = document.createElement("button");
+  plus.type = "button";
+  plus.innerText = "＋";
+  plus.onclick = setCustomUser;
+  userButtons.appendChild(plus);
+
+  loadUser();
+  load();
+  updateAllDisplay();
+  updateTotal();
+
+  if (currentUser) {
+    setStatus("担当：" + currentUser);
+  } else {
+    setStatus("担当を選択してください");
   }
 }
 
-/* 個別 */
-function change(i,val){
+/* ===== 入力ロジック ===== */
+function change(i, val) {
   const name = stores[i].name;
+  let current = data[name];
 
-  if(data[name]===null){
-    if(val===1) data[name]=1;
-  }else{
-    if(val===-1 && data[name]===0){
-      if(!confirm("不明（？）にしますか？")) return;
-      data[name]=null;
-    }else{
-      data[name]=Math.max(0,data[name]+val);
+  if (current === null) {
+    if (val > 0) data[name] = 0;
+  } else {
+    if (current === 0 && val < 0) {
+      data[name] = null; // 0からマイナスで「？」にする
+    } else {
+      data[name] = Math.max(0, (current || 0) + val);
     }
   }
 
   updateDisplay(i);
   updateTotal();
+  setStatus("未保存の変更があります");
 }
 
-/* 全店 */
-function changeAll(val){
-  stores.forEach((s,i)=>{
-    const name=s.name;
+function changeAll(val) {
+  stores.forEach((s, i) => {
+    let current = data[s.name];
 
-    if(data[name]===null){
-      if(val===1) data[name]=1;
-    }else{
-      if(val===-1 && data[name]===0){
-        data[name]=null;
-      }else{
-        data[name]=Math.max(0,data[name]+val);
+    if (current === null) {
+      if (val > 0) data[s.name] = 0;
+    } else {
+      if (current === 0 && val < 0) {
+        data[s.name] = null;
+      } else {
+        data[s.name] = Math.max(0, (current || 0) + val);
       }
     }
 
     updateDisplay(i);
   });
+
   updateTotal();
+  setStatus("未保存の変更があります");
 }
 
-/* 合計 */
-function updateTotal(){
-  let sum=0;
-  for(let k in data){
-    if(data[k]!==null) sum+=data[k];
+function updateDisplay(i) {
+  const name = stores[i].name;
+  const el = document.getElementById("qty" + i);
+  const val = data[name];
+
+  if (val === null) {
+    el.innerText = "？";
+    el.className = "qty unknown";
+  } else {
+    el.innerText = val;
+    el.className = "qty " + (val === 0 ? "zero" : "");
   }
-  document.getElementById("total").innerText="合計："+sum;
 }
 
-/* 保存 */
-function save(){
-  localStorage.setItem("shipment_"+today,
-    JSON.stringify({user:currentUser,data:data})
-  );
+function updateAllDisplay() {
+  stores.forEach((s, i) => updateDisplay(i));
+}
+
+function updateTotal() {
+  let sum = 0;
+
+  for (let k in data) {
+    if (data[k] !== null) sum += data[k] || 0;
+  }
+
+  document.getElementById("total").innerText = "合計：" + sum;
+}
+
+/* ===== 共通チェック ===== */
+function requireUser() {
+  if (!currentUser) {
+    alert("担当を選択してください");
+    setStatus("担当を選択してください");
+    return false;
+  }
+  return true;
+}
+
+function getStorageKey() {
+  const safeUser = sanitizeFileName(currentUser || "no_user");
+  return `shipment_${today}_${safeUser}`;
+}
+
+function setStatus(msg) {
+  statusEl.innerText = msg;
+}
+
+function getCurrentTimeText() {
+  return new Date().toLocaleTimeString("ja-JP", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit"
+  });
+}
+
+/* ===== 保存・読み込み ===== */
+function save() {
+  if (!requireUser()) return;
+
+  const payload = {
+    date: today,
+    user: currentUser,
+    savedAt: new Date().toISOString(),
+    data: data
+  };
+
+  localStorage.setItem(getStorageKey(), JSON.stringify(payload));
+
+  // 旧形式との互換用。不要なら次の1行は削除しても問題ありません。
+  localStorage.setItem("shipment_" + today, JSON.stringify(payload));
+
+  setStatus("保存済み：" + getCurrentTimeText());
   alert("保存OK");
 }
 
-/* 読込 */
-function load(){
-  const saved=localStorage.getItem("shipment_"+today);
-  if(saved){
-    const parsed=JSON.parse(saved);
-    const d=parsed.data||parsed;
+function load() {
+  let saved = null;
 
-    stores.forEach((s,i)=>{
-      data[s.name]=(d[s.name]===undefined)?0:d[s.name];
-      updateDisplay(i);
-    });
+  if (currentUser) {
+    saved = localStorage.getItem(getStorageKey());
   }
-  updateTotal();
+
+  // 旧形式データも読み込めるようにする
+  if (!saved) {
+    saved = localStorage.getItem("shipment_" + today);
+  }
+
+  if (!saved) return;
+
+  try {
+    const parsed = JSON.parse(saved);
+    const loadedData = parsed.data || {};
+
+    stores.forEach((st) => {
+      if (Object.prototype.hasOwnProperty.call(loadedData, st.name)) {
+        data[st.name] = loadedData[st.name];
+      } else {
+        data[st.name] = 0;
+      }
+    });
+
+    if (parsed.user && !currentUser) {
+      currentUser = parsed.user;
+      localStorage.setItem("user", currentUser);
+      activateUserButtonByName(currentUser);
+    }
+  } catch (e) {
+    console.error(e);
+    alert("保存データの読み込みに失敗しました");
+  }
 }
 
-/* LINE */
-function shareLine(){
-  let text=`出荷報告（${today}）\n担当：${currentUser}\n\n`;
+/* ===== LINE共有 ===== */
+function shareLine() {
+  if (!requireUser()) return;
 
-  stores.forEach(s=>{
-    const val = data[s.name]===null ? "?" : data[s.name];
-    text+=`${s.name}：${val}\n`;
+  let text = `出荷（${today}）担当:${currentUser}\n`;
+  let sum = 0;
+
+  stores.forEach(s => {
+    const val = data[s.name];
+    const disp = val === null ? "?" : val;
+    text += `${s.name}:${disp}\n`;
+    if (val !== null) sum += val;
   });
-text += `\n合計：${Object.values(data).reduce((a,b)=>a+(b||0),0)}`;
-  window.open("https://line.me/R/msg/text/?"+encodeURIComponent(text));
+
+  text += `合計:${sum}`;
+
+  setStatus("LINE共有を開きました：" + getCurrentTimeText());
+  window.open("https://line.me/R/msg/text/?" + encodeURIComponent(text), "_blank");
 }
 
-/* CSV */
-function exportCSV(){
-  let csv="日付,担当,店舗,数量\n";
+/* ===== CSV出力 ===== */
+function exportCSV() {
+  if (!requireUser()) return;
 
-  stores.forEach(s=>{
-    let val = data[s.name]===null ? "?" : data[s.name];
-    csv+=`${today},${currentUser},${s.name},${val}\n`;
+  let csv = "日付,担当,店舗,数量\n";
+  let sum = 0;
+
+  stores.forEach(s => {
+    const val = data[s.name];
+    const disp = val === null ? "?" : val;
+    csv += [today, currentUser, s.name, disp].map(csvEscape).join(",") + "\n";
+    if (val !== null) sum += val;
   });
 
-  // ★ここが合計（絶対入る）
-  csv+=`${today},合計,${getTotal()}\n`;
+  csv += [today, currentUser, "合計", sum].map(csvEscape).join(",") + "\n";
 
-  const blob=new Blob(
-    [new Uint8Array([0xEF,0xBB,0xBF]), csv],
-    {type:"text/csv"}
-  );
+  // Excelでの文字化け対策としてUTF-8 BOMを付ける
+  const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+  const blob = new Blob([bom, csv], { type: "text/csv;charset=utf-8" });
 
-  const link=document.createElement("a");
-  link.href=URL.createObjectURL(blob);
-  link.download=`出荷_${today}.csv`;
-  link.click();
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+
+  const safeUser = sanitizeFileName(currentUser || "no_user");
+  a.download = `${today}_${safeUser}.csv`;
+
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+
+  setStatus("CSV出力済み：" + getCurrentTimeText());
 }
 
-/* リセット */
-function resetAll(){
-  if(!confirm("リセットしますか？")) return;
+function csvEscape(value) {
+  const str = String(value ?? "");
+  if (/[",\n\r]/.test(str)) {
+    return '"' + str.replace(/"/g, '""') + '"';
+  }
+  return str;
+}
 
-  stores.forEach((s,i)=>{
-    data[s.name]=0;
+function sanitizeFileName(name) {
+  return String(name).replace(/[\\/:*?"<>|]/g, "").trim() || "no_user";
+}
+
+/* ===== リセット ===== */
+function resetAll() {
+  if (!confirm("入力内容をリセットしますか？")) return;
+
+  stores.forEach((s, i) => {
+    data[s.name] = 0;
     updateDisplay(i);
   });
+
   updateTotal();
+  setStatus("リセットしました。必要なら保存してください");
 }
 
-/* 担当 */
-function setActiveButton(id){
-  document.querySelectorAll("#userButtons button")
-    .forEach(b=>b.classList.remove("activeUser"));
-  document.getElementById(id).classList.add("activeUser");
+/* ===== 担当 ===== */
+function setUser(name, id) {
+  currentUser = name;
+  localStorage.setItem("user", name);
+
+  document.querySelectorAll("#userButtons button").forEach(b => b.classList.remove("activeUser"));
+  if (id) document.getElementById(id)?.classList.add("activeUser");
+
+  setStatus("担当：" + currentUser);
 }
 
-function setUser(name){
-  currentUser=name;
-  localStorage.setItem("user",name);
+function setCustomUser() {
+  const n = prompt("担当");
+  if (!n) return;
 
-  if(name==="東伸水産") setActiveButton("user_A");
-  else if(name==="青山水産") setActiveButton("user_B");
-  else if(name==="カネツル") setActiveButton("user_C");
+  currentUser = n.trim();
+  if (!currentUser) return;
+
+  localStorage.setItem("user", currentUser);
+  document.querySelectorAll("#userButtons button").forEach(b => b.classList.remove("activeUser"));
+
+  setStatus("担当：" + currentUser);
 }
 
-function setCustomUser(){
-  const name=prompt("担当名入力");
-  if(!name) return;
+function loadUser() {
+  const u = localStorage.getItem("user");
+  if (!u) return;
 
-  currentUser=name;
-  localStorage.setItem("user",name);
-  localStorage.setItem("customUser",name);
-
-  document.getElementById("user_D").innerText=name;
-  setActiveButton("user_D");
+  currentUser = u;
+  activateUserButtonByName(u);
 }
 
-function loadUser(){
-  const saved = localStorage.getItem("user");
-  const custom = localStorage.getItem("customUser");
+function activateUserButtonByName(name) {
+  document.querySelectorAll("#userButtons button").forEach(b => b.classList.remove("activeUser"));
 
-  if(custom){
-    document.getElementById("user_D").innerText = custom;
+  const found = CONFIG.users.find(x => x.name === name);
+  if (found) {
+    document.getElementById(found.id)?.classList.add("activeUser");
   }
-
-  if(saved){
-    currentUser = saved;
-  }
-
-  if(currentUser==="東伸水産") setActiveButton("user_A");
-  else if(currentUser==="青山水産") setActiveButton("user_B");
-  else if(currentUser==="カネツル") setActiveButton("user_C");
-  else setActiveButton("user_D");
 }
 
-/* SW */
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js');
+/* ===== Service Worker ===== */
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js").catch(err => {
+    console.warn("Service Worker registration failed:", err);
+  });
 }
-
-/* 初期化 */
-load();
-loadUser();
 </script>
 
 </body>
