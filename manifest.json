@@ -1,7 +1,7 @@
 {
-  "name": "俺のレシピ",
-  "short_name": "俺レシピ",
-  "description": "人数に合わせて分量を自動計算できるレシピ管理アプリ",
+  "name": "出荷入力システム",
+  "short_name": "出荷入力",
+  "description": "店舗別の出荷数量を素早く入力・共有するためのシステム",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",

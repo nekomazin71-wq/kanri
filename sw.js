@@ -1,13 +1,10 @@
-const CACHE_NAME = "my-recipe-v1";
+const CACHE_NAME = "shipment-v1";
 const ASSETS_TO_CACHE = [
   "./",
-  "./my_recipe_complete.html",
-  "./manifest.json",
-  // アイコンがある場合はここに追加
-  // "./icon.png" 
+  "./index.html",
+  "./manifest.json"
 ];
 
-// インストール時にキャッシュ
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -17,7 +14,6 @@ self.addEventListener("install", (event) => {
   self.skipWaiting();
 });
 
-// 古いキャッシュを削除
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
@@ -29,7 +25,6 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
-// リクエスト時にキャッシュを優先して返す (Cache First)
 self.addEventListener("fetch", (event) => {
   event.respondWith(
     caches.match(event.request).then((response) => {
