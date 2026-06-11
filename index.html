@@ -175,30 +175,31 @@ const CONFIG = {
   users: [
     { id: "A", name: "東伸水産" },
     { id: "B", name: "青山水産" },
-    { id: "C", name: "カネツル青果" }
+    { id: "C", name: "カネツル" }
   ],
   stores: [
     { name: "湖西", color: "#ffe0e0" },
     { name: "高塚", color: "#ffe0e0" },
     { name: "北寺島", color: "#e0e0ff" },
-    { name: "有玉", color: "#e0e0ff" },
     { name: "引佐", color: "#e0e0ff" },
+    { name: "有玉", color: "#e0e0ff" },
+    { name: "中野", color: "#ffe0ff" },
     { name: "磐田", color: "#ffffe0" },
     { name: "袋井", color: "#ffffe0" },
-    { name: "中野", color: "#ffe0ff" },
-    { name: "袋井南", color: "#ffe0ff" },
     { name: "掛川", color: "#e1f5fe" },
+    { name: "袋井南", color: "#ffe0ff" },
     { name: "成滝", color: "#e1f5fe" },
     { name: "菊川", color: "#e1f5fe" },
     { name: "静波", color: "#ffe0e0" },
-    { name: "石津", color: "#ffe0e0" },
     { name: "井口", color: "#e0e0ff" },
     { name: "藤枝", color: "#e0e0ff" },
-    { name: "丸子", color: "#ffffe0" },
+    { name: "石津", color: "#ffe0e0" },
     { name: "富士見", color: "#ffffe0" },
-    { name: "清水", color: "#ffe0ff" },
+    { name: "丸子", color: "#ffffe0" },
+    { name: "大坪", color: "#ffe0ff" },
     { name: "竜南", color: "#ffe0ff" },
-    { name: "大坪", color: "#ffe0ff" }
+    { name: "清水", color: "#ffe0ff" }
+ 
   ]
 };
 
@@ -210,9 +211,13 @@ const list = document.getElementById("list");
 const statusEl = document.getElementById("status");
 
 /* ===== 日付：日本時間 ===== */
-const now = new Date();
-const jst = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
-const today = jst.toISOString().slice(0, 10);
+// Intl.DateTimeFormatを使用して日本時間の「年-月-日」を直接取得
+const today = new Intl.DateTimeFormat('ja-JP', {
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  timeZone: 'Asia/Tokyo'
+}).format(new Date()).replace(/\//g, '-');
 document.getElementById("date").innerText = today;
 
 /* ===== 初期化 ===== */
@@ -465,7 +470,13 @@ function exportCSV() {
   a.href = URL.createObjectURL(blob);
 
   const safeUser = sanitizeFileName(currentUser || "no_user");
-  a.download = `${today}_${safeUser}.csv`;
+  const timeStr = new Intl.DateTimeFormat('ja-JP', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone: 'Asia/Tokyo'
+  }).format(new Date()).replace(/:/g, '');
+  a.download = `${today}_${timeStr}_${safeUser}.csv`;
 
   document.body.appendChild(a);
   a.click();
