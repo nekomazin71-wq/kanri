@@ -430,7 +430,9 @@ function load() {
 function shareLine() {
   if (!requireUser()) return;
 
-  let text = `出荷（${today}）担当:${currentUser}\n`;
+  // 現在時刻を取得してメッセージに追加
+  const timeStr = getCurrentTimeText();
+  let text = `出荷（${today} ${timeStr}）\n担当:${currentUser}\n\n`;
   let sum = 0;
 
   stores.forEach(s => {
@@ -442,9 +444,10 @@ function shareLine() {
 
   text += `合計:${sum}`;
 
-  setStatus("LINE共有を開きました：" + getCurrentTimeText());
-  window.open("https://line.me/R/msg/text/?" + encodeURIComponent(text), "_blank");
+  setStatus("LINE共有を開きました：" + timeStr);
+  window.open("https://line.me/R/msg/text/?" + encodeURIComponent(text ), "_blank");
 }
+
 
 /* ===== CSV出力 ===== */
 function exportCSV() {
